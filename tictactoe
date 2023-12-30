@@ -1,0 +1,210 @@
+from wypp import *
+
+# Ein Spieler wird entweder durch ein 'x' oder ein 'o' repräsentiert.
+Player = Literal['x', 'o']
+
+# Eine Markierung ist entweder das Zeichen eines Spielers oder ein freies Feld '-'
+Mark = Literal['x', 'o', '-']
+
+Game = list[list[Mark]]
+
+
+# Aufgabe 1
+
+# Prüft ob alle Felder des Spiels gefüllt sind.
+# Eingabe: Spielfeld (Game)
+# Ausgabe: Alle Felder belegt oder noch mindestens eins frei (bool)
+
+def gameFull(game: Game) -> bool:
+    for i in range(3):
+        for j in range(3):
+            if game[i][j] == '-':
+                return False
+    return True
+
+
+game1 = [['x', 'o', 'x'],
+        ['x', 'o', 'x'],
+        ['o', 'x', 'o']]
+
+game2 = [['x', 'o', 'x'],
+        ['x', 'o', 'x'],
+        ['o', '-', 'o']]
+
+
+check(gameFull(game1), True)
+check(gameFull(game2), False)
+
+game3 = [['x', 'o', 'x'],
+        ['x', 'o', 'o'],
+        ['x', '-', 'o']]
+
+game4 = [['o', 'o', 'o'],
+        ['x', 'o', 'o'],
+        ['o', '-', 'o']]
+
+game5 = [['x', 'x', 'o'],
+        ['x', 'x', 'o'],
+        ['o', '-', 'x']]
+
+game6 = [['o', 'x', 'o'],
+        ['x', 'o', 'x'],
+        ['o', '-', 'o']]
+
+# Aufgabe 2 
+
+# Prüft ob das Spiel einen Gewinner hat und gibt diesen ggf. zurück.
+# Eingabe: Spielfeld (Game)
+# Ausgabe: Gewinner oder None (Optional[Player])
+
+def checkWinner(game: Game) -> Optional[Player]:
+    for i in range(3):
+        for j in range(3):
+            # Spalten
+            if game[0][j] == game[1][j] == game[2][j] != '-':
+                return game[0][j]
+            # Zeilen
+            if game[i][0] == game[i][1] == game[i][2] != '-':
+                return game[i][0]
+            # Diagonale
+            if game[0][0] == game[1][1] == game[2][2] != '-':
+                return game[0][0]
+            if game[2][0] == game[1][1] == game[0][2] != '-':
+                return game[2][0]
+    else:
+        return None
+
+
+check(checkWinner(game1), None)
+check(checkWinner(game3), 'x')
+check(checkWinner(game4), 'o')
+check(checkWinner(game5), 'x')
+check(checkWinner(game6), 'o')
+
+
+# Aufgabe 3
+
+# Bricht das Programm mit einer Fehlermeldung ab.
+def error(msg: str) -> None:
+    raise Exception(msg)
+
+# Platziert die Markierung eines Spielers auf dem Spielfeld.
+# Eingabe:  - Spielfeld (Game)
+#           - Zeile (int)
+#           - Spalte (int)
+#           - Spieler (Player)
+# Ausgabe: None
+
+def placePlayer(game: Game, i: int, j: int, player: Player) -> None:
+    if game[i][j] != '-':
+        error('Feld ist schon belegt!')   
+    else:
+        game[i][j] = player
+
+game7 = [['-', '-', '-'],
+        ['-', '-', '-'],
+        ['-', '-', '-']]
+
+placePlayer(game7, 0, 0, 'x')
+check(game7, [['x', '-', '-'],
+             ['-', '-', '-'],
+             ['-', '-', '-']])
+
+
+# Aufgabe 4
+
+game8 = [['-', '-', '-'],
+        ['-', '-', '-'],
+        ['-', '-', '-']]
+
+# Stellt das Spiel als String dar
+# Eingabe: Spielfeld (Game)
+# Ausgabe: Spielfeld (str)
+
+def gameToString(game: Game) -> str:
+    rows = []
+    for row in game:
+        cells = []
+        for cell in row:
+            if cell == '-':
+                cells.append('-')
+            elif cell == 'x':
+                cells.append('x')
+            elif cell == 'o':
+                cells.append('o')
+            else:
+                cells.append(str(cell))
+        rows.append('| ' + ' | '.join(cells) + ' |')
+    return '\n'.join(rows)
+
+#print(gameToString(game8))
+check(gameToString(game8), '| - | - | - |\n| - | - | - |\n| - | - | - |')
+check(gameToString(game1), '| x | o | x |\n| x | o | x |\n| o | x | o |')
+#print(gameToString(game1))
+
+
+# Aufgabe 5
+
+# Liest von der Konsole den Zug eines Spielers.
+# Eingabe: Spieler (Player)
+# Ausgabe: Position des Spielers
+
+def getMove(player: Player) -> tuple[int, int]:
+    move = input(f"Eingabe Spieler {player} in der Form Zeile, Spalte: ")
+    
+    move_parts = move.split(',')
+    
+    i = int(move_parts[0])
+    j = int(move_parts[1])
+    
+    return (i, j)
+
+
+# Aufgabe 6
+
+# Führt einen Halbzug durch
+# Eingabe: - Spielfeld (Game)
+#          - Spieler (Player)
+# Ausgabe: Spielstand (bool)
+
+def halfMove(game: Game, player: Player) -> bool:
+        print(gameToString(game))
+        i, j = getMove(player)
+        if not placePlayer(game, i, j, player):
+            if player == 'x':
+                player = 'o'
+            else:
+                player = 'x'
+        if checkWinner(game):
+            return True
+        elif gameFull(game):
+            return True
+        return False
+
+
+# Aufgabe 7
+
+# Spielt ein komplettes Spiel durch
+# Eingabe: None
+# Ausgabe: None
+
+def fullGame() -> None:
+    newgame = [['-', '-', '-'],['-', '-', '-'],['-', '-', '-']]
+    x = 0
+    player = 'x'
+    while x < 10:
+        halfMove(newgame, player)
+        x += 1
+        if checkWinner(newgame):
+            print("Gewinner: " + player)
+            print(gameToString(newgame))
+            break
+        elif gameFull(newgame):
+            print("Spielfeld voll. Unentschieden!")
+            print(gameToString(newgame))
+            break
+        if player == 'x':
+            player = 'o'
+        elif player == 'o':
+            player = 'x'
+        
